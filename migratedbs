@@ -1,0 +1,23 @@
+#!/bin/bash
+
+overwrite='y'
+
+credentialsFile=./mysql-credentials.cnf
+
+for i in `ls *.sql`;
+do
+    db=`echo $i| sed 's/\(.*\)\-m.*/\1/'`;
+
+    $(mysql --defaults-extra-file=$credentialsFile -sN -e "CREATE DATABASE \`$db\`;" 2> /dev/null )
+    if [ $? -ne 1 ];then echo -n "$db Created ... ";
+    else echo -n "$db Exists ... ";
+	if [[ $overwrite == "n" ]];then echo "and will NOT be Overwritten";continue;
+        else echo "and WILL be Overwritten ... "
+        fi
+    fi
+
+    $(mysql --defaults-extra-file=$credentialsFile -sN $db < $i  2> /dev/null )
+    if [ $? -ne 1 ];then echo "SQL Executed in $db";else echo "ERROR";break;fi
+
+done;
+
